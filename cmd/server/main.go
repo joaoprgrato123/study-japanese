@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joaoprgrato123/study-japanese/internal/character"
 	"github.com/joaoprgrato123/study-japanese/internal/db"
 	"github.com/joaoprgrato123/study-japanese/internal/middleware"
 	"github.com/joaoprgrato123/study-japanese/internal/session"
@@ -34,13 +35,15 @@ func main() {
 	// repositories
 	userRepo := user.NewUserRepository(pool)
 	sessionRepo := session.NewSessionRepository(pool)
+	characterRepo := character.NewCharacterRepository(pool)
 
 	// services
 	userService := user.NewUserService(userRepo)
 	sessionService := session.NewSessionService(sessionRepo)
-
+	characterService := character.NewCharacterService(characterRepo)
 	// handlers
 	userHandler := user.NewUserHandler(userService, sessionService)
+	characterHandler := character.NewCharacterHandler(characterService)
 
 	// router
 
@@ -55,6 +58,9 @@ func main() {
 	// protected routes — RequireAuth runs before every handler here
 	protected := r.PathPrefix("/api").Subrouter()
 	protected.Use(middleware.RequireAuth(sessionService))
+
+	protected.HandleFunc("/challenges/generate", characterHandler.GenerateChallenge).Methods("POST")
+	protected.HandleFunc("/challenges/add", characterHandler.AddCharacter).Methods("POST")
 
 	port := os.Getenv("PORT")
 	if port == "" {
