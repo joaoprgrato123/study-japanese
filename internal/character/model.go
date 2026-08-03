@@ -3,13 +3,13 @@ package character
 import "time"
 
 type Character struct {
-	ID        int64
-	Character string
-	Reading   string
-	Meaning   string
-	Category  string
-	Level     string
-	CreatedAt time.Time
+	ID        int64     `json:"id"`
+	Character string    `json:"character"`
+	Reading   string    `json:"reading"`
+	Meaning   string    `json:"meaning"`
+	Category  string    `json:"category"`
+	Level     string    `json:"level"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ChallengeRequest struct {
