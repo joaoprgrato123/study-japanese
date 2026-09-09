@@ -10,6 +10,7 @@ import (
 	"github.com/joaoprgrato123/study-japanese/internal/character"
 	"github.com/joaoprgrato123/study-japanese/internal/db"
 	"github.com/joaoprgrato123/study-japanese/internal/middleware"
+	"github.com/joaoprgrato123/study-japanese/internal/role"
 	"github.com/joaoprgrato123/study-japanese/internal/session"
 	"github.com/joaoprgrato123/study-japanese/internal/user"
 	"github.com/joho/godotenv"
@@ -36,14 +37,18 @@ func main() {
 	userRepo := user.NewUserRepository(pool)
 	sessionRepo := session.NewSessionRepository(pool)
 	characterRepo := character.NewCharacterRepository(pool)
+	roleRepo := role.NewRoleRepository(pool)
 
 	// services
 	userService := user.NewUserService(userRepo)
 	sessionService := session.NewSessionService(sessionRepo)
 	characterService := character.NewCharacterService(characterRepo)
+	roleService := role.NewRoleService(roleRepo)
+
 	// handlers
 	userHandler := user.NewUserHandler(userService, sessionService)
 	characterHandler := character.NewCharacterHandler(characterService)
+	roleHandler := role.NewRoleHandler(roleService)
 
 	// router
 
@@ -61,6 +66,16 @@ func main() {
 
 	protected.HandleFunc("/challenges/generate", characterHandler.GenerateChallenge).Methods("POST")
 	protected.HandleFunc("/challenges/add", characterHandler.AddCharacter).Methods("POST")
+	protected.HandleFunc("/roles", roleHandler.GetAll).Methods("GET")
+	protected.HandleFunc("/roles/user/{user_id}", roleHandler.GetUserRoles).Methods("GET")
+
+	// admin only routes
+	admin := r.PathPrefix("/api").Subrouter()
+	admin.Use(middleware.RequireAuth(sessionService))
+	admin.Use(middleware.RequireRole(roleService, "admin"))
+	admin.HandleFunc("/roles", roleHandler.Create).Methods("POST")
+	admin.HandleFunc("/roles/assign", roleHandler.AssignToUser).Methods("POST")
+	admin.HandleFunc("/roles/remove", roleHandler.RemoveFromUser).Methods("POST")
 
 	port := os.Getenv("PORT")
 	if port == "" {
