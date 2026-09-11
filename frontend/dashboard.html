@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Study Japanese</h1>
+    <p id="welcome"></p>
+    <button id="logout-btn">Logout</button>
+
+    <hr>
+
+    <h2>Start a Challenge</h2>
+
+    <label>Category:</label>
+    <select id="category">
+        <option value="hiragana">Hiragana</option>
+        <option value="katakana">Katakana</option>
+        <option value="kanji">Kanji</option>
+        <option value="random">Random</option>
+    </select>
+
+    <label>Level:</label>
+    <select id="level">
+        <option value="A1">A1</option>
+        <option value="A2">A2</option>
+        <option value="B1">B1</option>
+        <option value="B2">B2</option>
+    </select>
+
+    <label>Amount:</label>
+    <select id="amount">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+    </select>
+
+    <button id="start-btn">Start Challenge</button>
+
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

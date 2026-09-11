@@ -14,6 +14,7 @@ import (
 	"github.com/joaoprgrato123/study-japanese/internal/session"
 	"github.com/joaoprgrato123/study-japanese/internal/user"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -82,8 +83,19 @@ func main() {
 		port = "8080"
 	}
 
+	// after r := mux.NewRouter()
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "DELETE"},
+		AllowedHeaders:   []string{"Content-Type"},
+		AllowCredentials: true, // required for cookies to work cross-origin
+	})
+
+	// wrap the router with CORS
+	http.ListenAndServe(":"+port, c.Handler(r))
+
 	log.Printf("server running on http://localhost:%s", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
+	if err := http.ListenAndServe(":"+port, c.Handler(r)); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 
