@@ -68,7 +68,7 @@ func main() {
 	protected.HandleFunc("/challenges/add", characterHandler.AddCharacter).Methods("POST")
 	protected.HandleFunc("/roles", roleHandler.GetAll).Methods("GET")
 	protected.HandleFunc("/roles/user/{user_id}", roleHandler.GetUserRoles).Methods("GET")
-
+	protected.HandleFunc("/me", userHandler.Me).Methods("GET")
 	// admin only routes
 	admin := r.PathPrefix("/api").Subrouter()
 	admin.Use(middleware.RequireAuth(sessionService))

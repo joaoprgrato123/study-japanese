@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/joaoprgrato123/study-japanese/internal/httputil"
+	"github.com/joaoprgrato123/study-japanese/internal/middleware"
 	"github.com/joaoprgrato123/study-japanese/internal/session"
 )
 
@@ -94,4 +95,16 @@ func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 
 	httputil.WriteJSON(w, http.StatusOK, map[string]string{"message": "logged out"})
+}
+
+func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
+	sess := r.Context().Value(middleware.SessionContextKey).(session.Session)
+
+	u, err := h.userService.GetByID(r.Context(), sess.UserID)
+	if err != nil {
+		httputil.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "something went wrong"})
+		return
+	}
+
+	httputil.WriteJSON(w, http.StatusOK, UserResponse{ID: u.ID, Email: u.Email})
 }

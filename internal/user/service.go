@@ -18,6 +18,7 @@ var (
 type UserService interface {
 	Register(ctx context.Context, email, password string) (User, error)
 	Login(ctx context.Context, email, password string) (User, error)
+	GetByID(ctx context.Context, id int64) (User, error)
 }
 
 type userService struct {
@@ -68,4 +69,8 @@ func (s *userService) Login(ctx context.Context, email, password string) (User, 
 	}
 
 	return u, nil
+}
+
+func (s *userService) GetByID(ctx context.Context, id int64) (User, error) {
+	return s.repo.GetByID(ctx, id)
 }
