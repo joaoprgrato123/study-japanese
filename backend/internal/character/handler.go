@@ -24,7 +24,7 @@ func (h *CharacterHandler) GenerateChallenge(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	challenge, err := h.service.GenerateChallenge(r.Context(), req)
+	challenge, err := h.service.GenerateChallenge(r.Context(), toChallengeParams(req))
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrInvalidCategory):
@@ -41,18 +41,18 @@ func (h *CharacterHandler) GenerateChallenge(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	httputil.WriteJSON(w, http.StatusOK, challenge)
+	httputil.WriteJSON(w, http.StatusOK, toChallengeResponse(challenge))
 }
 
 // AddCharacter is a protected route — only admins should call this (roles come later)
 func (h *CharacterHandler) AddCharacter(w http.ResponseWriter, r *http.Request) {
-	var c Character
-	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
+	var req AddCharacterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httputil.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 		return
 	}
 
-	created, err := h.service.AddCharacter(r.Context(), c)
+	created, err := h.service.AddCharacter(r.Context(), toCharacter(req))
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrInvalidCategory):
@@ -65,5 +65,5 @@ func (h *CharacterHandler) AddCharacter(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	httputil.WriteJSON(w, http.StatusCreated, created)
+	httputil.WriteJSON(w, http.StatusCreated, toCharacterResponse(created))
 }

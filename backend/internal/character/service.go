@@ -29,7 +29,7 @@ var validLevels = map[string]bool{
 }
 
 type CharacterService interface {
-	GenerateChallenge(ctx context.Context, req ChallengeRequest) (ChallengeResponse, error)
+	GenerateChallenge(ctx context.Context, p ChallengeParams) ([]Question, error)
 	AddCharacter(ctx context.Context, c Character) (Character, error)
 }
 
@@ -54,25 +54,25 @@ func (s *characterService) AddCharacter(ctx context.Context, c Character) (Chara
 	return s.repo.Create(ctx, c)
 }
 
-func (s *characterService) GenerateChallenge(ctx context.Context, req ChallengeRequest) (ChallengeResponse, error) {
+func (s *characterService) GenerateChallenge(ctx context.Context, p ChallengeParams) ([]Question, error) {
 	// validate request
-	if !validCategories[req.Category] {
-		return ChallengeResponse{}, ErrInvalidCategory
+	if !validCategories[p.Category] {
+		return nil, ErrInvalidCategory
 	}
-	if !validLevels[req.Level] {
-		return ChallengeResponse{}, ErrInvalidLevel
+	if !validLevels[p.Level] {
+		return nil, ErrInvalidLevel
 	}
-	if req.Amount <= 0 {
-		return ChallengeResponse{}, ErrInvalidAmount
+	if p.Amount <= 0 {
+		return nil, ErrInvalidAmount
 	}
 
 	// fetch the question characters
-	chars, err := s.repo.GetRandom(ctx, req.Category, req.Level, req.Amount)
+	chars, err := s.repo.GetRandom(ctx, p.Category, p.Level, p.Amount)
 	if err != nil {
-		return ChallengeResponse{}, fmt.Errorf("fetching characters: %w", err)
+		return nil, fmt.Errorf("fetching characters: %w", err)
 	}
-	if len(chars) < req.Amount {
-		return ChallengeResponse{}, ErrNotEnoughChars
+	if len(chars) < p.Amount {
+		return nil, ErrNotEnoughChars
 	}
 
 	// collect IDs to exclude from distractors
@@ -83,27 +83,27 @@ func (s *characterService) GenerateChallenge(ctx context.Context, req ChallengeR
 
 	// fetch 2 distractors per question — we pick from this pool per question
 	// 2 wrong options + 1 correct = 3 total choices
-	distractors, err := s.repo.GetDistractors(ctx, excludeIDs, req.Amount*2)
+	distractors, err := s.repo.GetDistractors(ctx, excludeIDs, p.Amount*2)
 	if err != nil {
-		return ChallengeResponse{}, fmt.Errorf("fetching distractors: %w", err)
+		return nil, fmt.Errorf("fetching distractors: %w", err)
 	}
 
 	// build questions
-	questions := make([]ChallengeQuestion, 0, len(chars))
+	questions := make([]Question, 0, len(chars))
 	for i, c := range chars {
 		question, err := buildQuestion(c, distractors, i)
 		if err != nil {
-			return ChallengeResponse{}, err
+			return nil, err
 		}
 		questions = append(questions, question)
 	}
 
-	return ChallengeResponse{Questions: questions}, nil
+	return questions, nil
 }
 
 // buildQuestion builds a single question with 3 shuffled options.
 // The correct answer is randomly either the reading or the meaning.
-func buildQuestion(c Character, distractors []Character, index int) (ChallengeQuestion, error) {
+func buildQuestion(c Character, distractors []Character, index int) (Question, error) {
 	// randomly decide if the correct answer is the reading or the meaning
 	var answer string
 	answer = getRandomAnswerType(c)
@@ -115,7 +115,7 @@ func buildQuestion(c Character, distractors []Character, index int) (ChallengeQu
 
 	// if index goes over the len of the distractor list then throw error
 	if d2Index >= len(distractors) {
-		return ChallengeQuestion{}, ErrNotEnoughChars
+		return Question{}, ErrNotEnoughChars
 	}
 
 	// wrong options — also randomly reading or meaning from distractor characters
@@ -128,7 +128,7 @@ func buildQuestion(c Character, distractors []Character, index int) (ChallengeQu
 		options[i], options[j] = options[j], options[i]
 	})
 
-	return ChallengeQuestion{
+	return Question{
 		Character: c.Character,
 		Options:   options,
 		Answer:    answer,
