@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 )
 
 var (
@@ -12,6 +13,8 @@ var (
 	ErrInvalidLevel    = errors.New("invalid level")
 	ErrInvalidAmount   = errors.New("amount must be greater than 0")
 	ErrNotEnoughChars  = errors.New("not enough characters in the database for this filter")
+	ErrDuplicateChar   = errors.New("char already exists")
+	ErrInvalidInput    = errors.New("character, reading and meaning are required")
 )
 
 var validCategories = map[string]bool{
@@ -43,7 +46,7 @@ func NewCharacterService(repo CharacterRepository) CharacterService {
 
 func (s *characterService) AddCharacter(ctx context.Context, c Character) (Character, error) {
 	if c.Character == "" || c.Reading == "" || c.Meaning == "" {
-		return Character{}, fmt.Errorf("character, reading and meaning are required")
+		return Character{}, ErrInvalidInput
 	}
 	if !validCategories[c.Category] || c.Category == "random" {
 		return Character{}, ErrInvalidCategory
@@ -51,7 +54,15 @@ func (s *characterService) AddCharacter(ctx context.Context, c Character) (Chara
 	if !validLevels[c.Level] {
 		return Character{}, ErrInvalidLevel
 	}
-	return s.repo.Create(ctx, c)
+
+	newCharacter, err := s.repo.Create(ctx, c)
+	if err != nil {
+		if strings.Contains(err.Error(), "unique") {
+			return Character{}, ErrDuplicateChar
+		}
+		return Character{}, fmt.Errorf("creating char: %w", err)
+	}
+	return newCharacter, nil
 }
 
 func (s *characterService) GenerateChallenge(ctx context.Context, p ChallengeParams) ([]Question, error) {

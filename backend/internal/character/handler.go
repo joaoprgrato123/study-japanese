@@ -59,6 +59,10 @@ func (h *CharacterHandler) AddCharacter(w http.ResponseWriter, r *http.Request) 
 			httputil.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid category"})
 		case errors.Is(err, ErrInvalidLevel):
 			httputil.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid level"})
+		case errors.Is(err, ErrInvalidInput):
+			httputil.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		case errors.Is(err, ErrDuplicateChar):
+			httputil.WriteJSON(w, http.StatusConflict, map[string]string{"error": "character already exists"})
 		default:
 			httputil.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "something went wrong"})
 		}
