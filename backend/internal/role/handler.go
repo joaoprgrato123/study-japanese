@@ -25,7 +25,7 @@ func (h *RoleHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httputil.WriteJSON(w, http.StatusOK, roles)
+	httputil.WriteJSON(w, http.StatusOK, toRoleResponses(roles))
 }
 
 func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +49,7 @@ func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httputil.WriteJSON(w, http.StatusCreated, role)
+	httputil.WriteJSON(w, http.StatusCreated, toRoleResponse(role))
 }
 
 func (h *RoleHandler) AssignToUser(w http.ResponseWriter, r *http.Request) {
@@ -105,5 +105,5 @@ func (h *RoleHandler) GetUserRoles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httputil.WriteJSON(w, http.StatusOK, roles)
+	httputil.WriteJSON(w, http.StatusOK, toRoleResponses(roles))
 }
